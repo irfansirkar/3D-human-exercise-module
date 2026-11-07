@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robust-3D · Live demo</title>
+<meta name="description" content="Robust-3D demo: a photo-to-3D body model fitness coach with workouts and diet plans.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF4D8D'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='900' font-size='13' fill='white' text-anchor='middle'%3ER3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{--bg:#FFF2F6;--card:#fff;--ink:#22101A;--muted:#6E5763;--line:#F3D6E1;--acc:#FF4D8D;--deep:#C21E5B;--soft:#FFE0EB;--blue:#3D7BFF;
+  --f-head:"Montserrat",system-ui,sans-serif;--f-body:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+a{color:inherit}
+.demo-bar{background:var(--ink);color:#fff;font:600 12px var(--f-mono);letter-spacing:.05em;padding:8px max(16px,4vw);display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.demo-bar a{opacity:.8}
+.wrap{max-width:1100px;margin:0 auto;padding:28px max(16px,4vw) 60px;display:grid;gap:22px}
+h1{font:900 clamp(34px,6vw,60px)/1 var(--f-head);margin:0;letter-spacing:-.02em}
+h1 span{color:var(--acc)}
+.sub{max-width:64ch;color:var(--muted);margin:10px 0 0}
+.lbl{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.person{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:10px;cursor:pointer;font:inherit;color:var(--ink);display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;text-align:left}
+.person svg{width:36px;height:52px}
+.person b{font:800 14px var(--f-head);display:block}
+.person span{font-size:12px;color:var(--muted)}
+.person[aria-pressed="true"]{border-color:var(--acc);box-shadow:4px 4px 0 var(--acc)}
+@media (max-width:640px){.people{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:20px;padding:18px;min-width:0;display:grid;gap:12px;align-content:start}
+.viewer{background:radial-gradient(circle at 50% 40%,#3A1F2E,#160A11);border-radius:16px;position:relative;cursor:grab;touch-action:none;overflow:hidden}
+.viewer canvas{display:block;width:100%;height:auto}
+.viewer .hint{position:absolute;left:12px;bottom:10px;font:600 12px var(--f-mono);color:#FFC2D7}
+.meas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.m{background:var(--soft);border-radius:12px;padding:10px}
+.m b{display:block;font:900 22px var(--f-head);font-variant-numeric:tabular-nums}
+.goal{display:flex;gap:8px;flex-wrap:wrap}
+.g{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:7px 14px;font:700 13px var(--f-body);cursor:pointer;color:var(--ink)}
+.g[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.weeks{display:grid;gap:8px}
+.wk{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:start;background:var(--soft);border-radius:12px;padding:10px 12px}
+.wk b{font:800 14px var(--f-head);color:var(--deep)}
+.wk ul{margin:0;padding-left:18px;font-size:15px}
+.diet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.diet>div{border:1.5px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.diet b{display:block;font:900 20px var(--f-head);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar b{display:block;height:100%;background:var(--acc)}
+.prog{display:flex;align-items:end;gap:6px;height:90px;margin-top:6px}
+.prog i{flex:1;background:var(--acc);border-radius:6px 6px 0 0;opacity:.85}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.how div{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px}
+.how b{font:800 15px var(--f-head)}
+footer{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="demo-bar"><span>DEMO · SAMPLE BODY PROFILES · NOT MEDICAL ADVICE</span><span><a href="https://github.com/irfansirkar/3D-human-exercise-module">Code ↗</a> · <a href="https://irfansirkar.github.io/PERSONAL-PORFOLIO-WEBSITE/">Irfan's portfolio ↗</a></span></div>
+<main class="wrap">
+  <header>
+    <h1>Robust<span>-3D</span></h1>
+    <p class="sub">A fitness coach that turns a photo into a 3D body model, then builds targeted workouts, a diet plan and progress tracking around it. Mohammad Irfan Sirkar was lead developer at HackRev 2025.</p>
+  </header>
+
+  <section>
+    <div class="lbl" style="margin-bottom:8px">1 · Pick a sample photo</div>
+    <div class="people" id="people"></div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <div class="lbl">2 · Your 3D body model</div>
+      <div class="viewer" id="viewer"><canvas id="cv" width="520" height="520" aria-label="Rotating 3D body model"></canvas><span class="hint">⟲ drag to rotate</span></div>
+      <div class="meas" id="meas"></div>
+    </div>
+    <div class="card">
+      <div class="lbl">3 · Choose a goal</div>
+      <div class="goal" id="goals"></div>
+      <div class="lbl">Your 4-week plan</div>
+      <div class="weeks" id="weeks"></div>
+      <div class="lbl">Daily nutrition</div>
+      <div class="diet" id="diet"></div>
+      <div class="lbl">Projected progress (body fat %)</div>
+      <div class="prog" id="prog" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl" style="margin-bottom:10px">How the real app works</div>
+    <div class="how">
+      <div><b>1. Photo in</b><br>A front-facing photo is run through pose estimation to find key body points.</div>
+      <div><b>2. 3D body</b><br>The points fit a parametric 3D body model, which gives measurements.</div>
+      <div><b>3. Plan</b><br>Weak areas and the user's goal pick exercises, sets and a calorie target.</div>
+      <div><b>4. Track</b><br>New photos update the model over time to show progress.</div>
+    </div>
+  </section>
+  <footer>Built by Mohammad Irfan Sirkar · Hyderabad · <a href="https://github.com/irfansirkar">github.com/irfansirkar</a></footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+/* body profiles: shoulder, chest, waist, hip widths (relative) + height */
+const B=[
+ {n:'Arjun',d:'24 · 178 cm · 82 kg',sh:1.05,ch:1,wa:.92,hi:.95,h:1,m:{Chest:'98 cm',Waist:'88 cm','Body fat':'21%',BMI:'25.9'},bf:21,kcal:2350},
+ {n:'Priya',d:'29 · 162 cm · 58 kg',sh:.86,ch:.84,wa:.7,hi:.92,h:.92,m:{Chest:'86 cm',Waist:'70 cm','Body fat':'26%',BMI:'22.1'},bf:26,kcal:1800},
+ {n:'Kabir',d:'35 · 172 cm · 70 kg',sh:1,ch:.92,wa:.82,hi:.88,h:.97,m:{Chest:'94 cm',Waist:'80 cm','Body fat':'17%',BMI:'23.7'},bf:17,kcal:2250}
+];
+const G={
+ 'Lose fat':{w:[['Week 1','Brisk walk 30 min ×5','Bodyweight squats 3×15','Plank 3×30 s'],['Week 2','Intervals 20 min ×3','Lunges 3×12','Push-ups 3×10'],['Week 3','Circuit training ×4','Goblet squats 4×12','Mountain climbers 3×30 s'],['Week 4','Long walk + intervals','Full-body circuit ×4','Re-scan photo']],k:-400,mac:[35,35,30],d:-2.2},
+ 'Build muscle':{w:[['Week 1','Push / pull / legs ×3','Squat 4×8','Bench press 4×8'],['Week 2','Add 2.5 kg to main lifts','Rows 4×10','Overhead press 3×8'],['Week 3','Upper / lower split ×4','Deadlift 3×5','Pull-ups 4×max'],['Week 4','Deload: 60% weight','Mobility work','Re-scan photo']],k:300,mac:[30,45,25],d:-.6},
+ 'Posture':{w:[['Week 1','Wall angels 3×12','Chin tucks 3×15','Hip-flexor stretch'],['Week 2','Face pulls 3×15','Bird-dog 3×10','Thoracic rotations'],['Week 3','Rows 4×12','Glute bridges 4×15','Dead bug 3×10'],['Week 4','Combine the above ×3','Daily desk breaks','Re-scan photo']],k:0,mac:[30,40,30],d:-.8}
+};
+let cur=0,goal='Lose fat',rot=.5,drag=null,auto=true;
+function icon(b){return`<svg viewBox="0 0 36 52" aria-hidden="true"><circle cx="18" cy="7" r="5.5" fill="var(--acc)"/><rect x="${18-9*b.sh}" y="14" width="${18*b.sh}" height="18" rx="6" fill="var(--acc)"/><rect x="${18-7*b.hi}" y="30" width="${6.5*b.hi}" height="20" rx="3" fill="var(--deep)"/><rect x="${18+.5*b.hi}" y="30" width="${6.5*b.hi}" height="20" rx="3" fill="var(--deep)"/></svg>`}
+B.forEach((b,i)=>{const e=document.createElement('button');e.className='person';e.innerHTML=icon(b)+`<div><b>${b.n}</b><span>${b.d}</span></div>`;e.onclick=()=>{cur=i;render()};$('people').appendChild(e)});
+Object.keys(G).forEach(k=>{const e=document.createElement('button');e.className='g';e.textContent=k;e.onclick=()=>{goal=k;render()};$('goals').appendChild(e)});
+/* ---------- 3D mannequin: ellipsoid segments, projected with a simple rotation ---------- */
+const cv=$('cv'),x=cv.getContext('2d'),W=520,H=520;
+function parts(b){const s=b.h;return[
+ ['head',0,-1.55*s,0,.22,.27,.24],['neck',0,-1.25*s,0,.09,.1,.09],
+ ['chest',0,-.9*s,0,.42*b.sh,.32,.24*b.ch],['waist',0,-.42*s,0,.32*b.wa,.25,.2*b.wa],['hips',0,-.08*s,0,.36*b.hi,.2,.22*b.hi],
+ ['armL',-.55*b.sh,-.72*s,0,.1,.42,.1],['armR',.55*b.sh,-.72*s,0,.1,.42,.1],
+ ['legL',-.17*b.hi,.62*s,0,.14*b.hi,.62,.15],['legR',.17*b.hi,.62*s,0,.14*b.hi,.62,.15]]}
+function draw(){
+  const b=B[cur],c=Math.cos(rot),s=Math.sin(rot);
+  x.clearRect(0,0,W,H);
+  x.strokeStyle='rgba(255,194,215,.12)';x.lineWidth=1;
+  x.beginPath();x.ellipse(W/2,H*.9,180,40,0,0,6.28);x.stroke();
+  for(let i=-5;i<=5;i++){const px=i*.3;x.beginPath();x.moveTo(W/2+(px*c)*150,H*.9+(px*s)*30-40);x.lineTo(W/2+(px*c)*150,H*.9+(px*s)*30+40);x.stroke()}
+  const ps=parts(b).map(([n,px,py,pz,rx,ry,rz])=>{const X=px*c-pz*s,Z=px*s+pz*c;const w=Math.sqrt((rx*c)**2+(rz*s)**2);return{n,X,Y:py,Z,w,ry}}).sort((a,b)=>a.Z-b.Z);
+  ps.forEach(p=>{const cx=W/2+p.X*118,cy=H*.5+p.Y*118,g=x.createRadialGradient(cx-p.w*40,cy-p.ry*50,5,cx,cy,Math.max(p.w,p.ry)*160);
+    g.addColorStop(0,'#FFB3CD');g.addColorStop(.6,'#FF4D8D');g.addColorStop(1,'#8A1640');x.fillStyle=g;x.beginPath();x.ellipse(cx,cy,p.w*118,p.ry*118,0,0,6.28);x.fill()});
+  x.strokeStyle='#36E8FF';x.setLineDash([5,5]);x.lineWidth=1.5;
+  [[-.9,b.sh*.42],[-.42,b.wa*.32],[-.08,b.hi*.36]].forEach(([y,r])=>{x.beginPath();x.ellipse(W/2,H*.5+y*b.h*118,r*118*1.03,8,0,0,6.28);x.stroke()});
+  x.setLineDash([]);
+}
+const v=$('viewer');
+v.onpointerdown=e=>{drag=e.clientX;auto=false;v.setPointerCapture(e.pointerId)};
+v.onpointermove=e=>{if(drag===null)return;rot+=(e.clientX-drag)*.01;drag=e.clientX;draw()};
+v.onpointerup=()=>drag=null;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function spin(){if(auto&&!reduce){rot+=.008;draw()}requestAnimationFrame(spin)})();
+function render(){
+  const b=B[cur],g=G[goal];
+  [...$('people').children].forEach((e,i)=>e.setAttribute('aria-pressed',i===cur));
+  [...$('goals').children].forEach(e=>e.setAttribute('aria-pressed',e.textContent===goal));
+  $('meas').innerHTML=Object.entries(b.m).map(([k,v])=>`<div class="m"><span class="lbl">${k}</span><b>${v}</b></div>`).join('');
+  $('weeks').innerHTML=g.w.map(([w,...l])=>`<div class="wk"><b>${w}</b><ul>${l.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('');
+  const kc=b.kcal+g.k;
+  $('diet').innerHTML=[['Calories',kc+''],['Protein',Math.round(kc*g.mac[0]/100/4)+' g'],['Carbs',Math.round(kc*g.mac[1]/100/4)+' g']].map(([k,v],i)=>`<div><span class="lbl">${k}</span><b>${v}</b>${i?`<div class="bar"><b style="width:${g.mac[i-1]}%"></b></div>`:''}</div>`).join('');
+  const pts=[0,1,2,3,4].map(i=>b.bf+g.d*i);const mx=Math.max(...pts),mn=Math.min(...pts)-2;
+  $('prog').innerHTML=pts.map((p,i)=>`<i style="height:${30+(p-mn)/(mx-mn)*60}%" title="Week ${i}: ${p.toFixed(1)}%"></i>`).join('');
+  draw();
+}
+render();
+</script>
+</body>
+</html>
